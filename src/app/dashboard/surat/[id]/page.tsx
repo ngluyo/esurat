@@ -83,7 +83,7 @@ export default function SuratDetailPage({ params }: { params: { id: string } }) 
         `)
         .eq('surat_id', params.id)
         .order('created_at', { ascending: true });
-
+      
       if (disposisiError) {
         console.error("Error fetching disposition history:", disposisiError.message);
       } else {
@@ -217,7 +217,7 @@ export default function SuratDetailPage({ params }: { params: { id: string } }) 
               <p className="text-sm text-gray-500">Nomor: {surat.nomor_surat}</p>
             </div>
             <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                surat.status === 'Baru' ? 'bg-blue-100 text-blue-800' :
+                surat.status === 'Baru' ? 'bg-blue-100 text-blue-800' : 
                 surat.status === 'Didisposisi' ? 'bg-yellow-100 text-yellow-800' :
                 surat.status === 'Draft' ? 'bg-gray-200 text-gray-800' :
                 surat.status === 'Menunggu Verifikasi' ? 'bg-purple-100 text-purple-800' :

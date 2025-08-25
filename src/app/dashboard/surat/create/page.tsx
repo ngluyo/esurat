@@ -38,7 +38,7 @@ export default function CreateSuratPage() {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name');
-
+      
       if (profilesError) {
         setError('Could not fetch user profiles.');
       } else {
@@ -75,7 +75,7 @@ export default function CreateSuratPage() {
         setLoading(false);
         return;
       }
-
+      
       const { data: { publicUrl } } = supabase.storage
         .from('surat_files')
         .getPublicUrl(filePath);

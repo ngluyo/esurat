@@ -57,7 +57,7 @@ export default function SuratListPage() {
 
         {loading && <p>Loading...</p>}
         {error && <p className="text-red-600">Error: {error}</p>}
-
+        
         {!loading && !error && (
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white">
@@ -78,7 +78,7 @@ export default function SuratListPage() {
                     <td className="py-4 px-6 whitespace-nowrap text-sm text-gray-500">{surat.jenis_surat}</td>
                     <td className="py-4 px-6 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        surat.status === 'Baru' ? 'bg-blue-100 text-blue-800' :
+                        surat.status === 'Baru' ? 'bg-blue-100 text-blue-800' : 
                         surat.status === 'Didisposisi' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-green-100 text-green-800'
                       }`}>

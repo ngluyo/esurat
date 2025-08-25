@@ -91,15 +91,15 @@ export default function DashboardPage() {
                 </div>
             </div>
         </div>
-
+        
         <div className="mt-8">
-             <button
+             <button 
                 onClick={() => router.push('/dashboard/surat')}
                 className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
             >
                 Lihat Semua Surat
             </button>
-            <button
+            <button 
                 onClick={() => router.push('/dashboard/surat/create')}
                 className="ml-4 px-4 py-2 font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none"
             >

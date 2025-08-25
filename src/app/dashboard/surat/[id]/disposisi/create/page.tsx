@@ -43,14 +43,14 @@ export default function CreateDisposisiPage({ params }: { params: { id: string }
         .select('id, perihal, nomor_surat')
         .eq('id', params.id)
         .single();
-
+      
       if (suratError) {
           setError('Could not fetch surat details.');
           setLoading(false);
           return;
       }
       setSurat(suratData);
-
+      
       // Fetch profiles of direct subordinates (for now, fetching all for simplicity)
       // In a real app, this should be an RPC call to a function that gets subordinates
       const { data: profilesData, error: profilesError } = await supabase
@@ -104,7 +104,7 @@ export default function CreateDisposisiPage({ params }: { params: { id: string }
       // Log the error, but don't block the user as the main action succeeded
       console.error('Failed to update surat status:', updateError);
     }
-
+    
     router.push(`/dashboard/surat/${params.id}`);
   };
 
@@ -115,15 +115,15 @@ export default function CreateDisposisiPage({ params }: { params: { id: string }
       <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Buat Disposisi</h1>
         <p className="text-sm text-gray-600 mb-6">Untuk Surat: &quot;{surat?.perihal}&quot; ({surat?.nomor_surat})</p>
-
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="penerima" className="block text-sm font-medium text-gray-700">Teruskan Kepada (Penerima)</label>
-            <select
-              id="penerima"
-              value={penerimaId}
-              onChange={(e) => setPenerimaId(e.target.value)}
-              required
+            <select 
+              id="penerima" 
+              value={penerimaId} 
+              onChange={(e) => setPenerimaId(e.target.value)} 
+              required 
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">-- Pilih Bawahan --</option>
@@ -135,16 +135,16 @@ export default function CreateDisposisiPage({ params }: { params: { id: string }
           </div>
           <div>
             <label htmlFor="instruksi" className="block text-sm font-medium text-gray-700">Instruksi / Catatan</label>
-            <textarea
-              id="instruksi"
-              value={instruksi}
-              onChange={(e) => setInstruksi(e.target.value)}
-              rows={4}
-              required
+            <textarea 
+              id="instruksi" 
+              value={instruksi} 
+              onChange={(e) => setInstruksi(e.target.value)} 
+              rows={4} 
+              required 
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             ></textarea>
           </div>
-
+          
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="flex justify-end space-x-4">
