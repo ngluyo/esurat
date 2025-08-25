@@ -1,109 +1,130 @@
-// esurat/src/app/register/page.tsx
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/utils/supabaseClient'
-import Link from 'next/link'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabaseClient';
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
 
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      })
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-      if (error) {
-        setError(error.message)
-      } else {
-        // Redirect ke login setelah registrasi berhasil
-        router.push('/login')
-        alert('Registrasi berhasil! Silakan periksa email Anda untuk verifikasi.')
-      }
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
     }
+
+    if (signUpData.user) {
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{ id: signUpData.user.id, full_name: fullName }]);
+
+        if (profileError) {
+            setError(`Error creating profile: ${profileError.message}. Please contact an administrator.`);
+            // Optionally, delete the user if profile creation fails
+            // await supabase.auth.admin.deleteUser(signUpData.user.id);
+        } else {
+            setMessage('Registration successful! Please check your email to confirm your account, then log in.');
+            // We don't redirect immediately, let them see the confirmation message.
+            // setTimeout(() => router.push('/login'), 5000);
+        }
+    } else {
+        setError('Registration failed. Please try again.');
+    }
+  };
+
+  const handleLoginRedirect = () => {
+    router.push('/login');
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
-        <h1 className="mb-6 text-center text-3xl font-bold text-gray-800">Daftar Akun Baru</h1>
-        <form onSubmit={handleRegister} className="space-y-4">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-center text-gray-900">Register Akun Baru</h1>
+        <form onSubmit={handleRegister} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="fullName">
+            <label
+              htmlFor="fullName"
+              className="text-sm font-medium text-gray-700"
+            >
               Nama Lengkap
             </label>
             <input
-              type="text"
               id="fullName"
+              type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               required
+              className="w-full px-3 py-2 mt-1 text-gray-900 bg-gray-200 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="email">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <input
-              type="email"
               id="email"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               required
+              className="w-full px-3 py-2 mt-1 text-gray-900 bg-gray-200 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="password">
-              Kata Sandi
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-gray-700"
+            >
+              Password
             </label>
             <input
-              type="password"
               id="password"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               required
+              minLength={6}
+              className="w-full px-3 py-2 mt-1 text-gray-900 bg-gray-200 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            disabled={loading}
-          >
-            {loading ? 'Memuat...' : 'Daftar'}
-          </button>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {message && <p className="text-sm text-green-600">{message}</p>}
+          <div>
+            <button
+              type="submit"
+              className="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Register
+            </button>
+          </div>
         </form>
-        {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Sudah punya akun?{' '}
-          <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Masuk di sini
-          </Link>
-        </p>
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            Sudah punya akun?{' '}
+            <button onClick={handleLoginRedirect} className="font-medium text-indigo-600 hover:text-indigo-500">
+              Login
+            </button>
+          </p>
+        </div>
       </div>
     </div>
-  )
+  );
 }

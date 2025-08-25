@@ -1,47 +1,87 @@
-// esurat/middleware.ts
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  // Ambil URL dari permintaan
-  const { pathname } = request.nextUrl
-  const supabase = createServerClient(request.cookies)
-  const { data } = await supabase.auth.getSession()
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
-  const isLoggedIn = !!data.session
-  const publicPaths = ['/login', '/register', '/'] // Halaman yang tidak memerlukan login
-
-  // Jika pengguna tidak login dan mencoba mengakses halaman yang tidak publik, redirect ke halaman login
-  if (!isLoggedIn && !publicPaths.includes(pathname)) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // Jika pengguna sudah login dan mencoba mengakses halaman login/register, redirect ke dashboard
-  if (isLoggedIn && (pathname === '/login' || pathname === '/register')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  // Lanjutkan ke halaman yang diminta
-  return NextResponse.next()
-}
-
-// Konfigurasi middleware agar hanya berjalan di path tertentu
-export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-}
-
-// Helper untuk membuat client Supabase di sisi server (middleware)
-function createServerClient(cookies: any) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    return createClient(supabaseUrl, supabaseKey, {
-        auth: { persistSession: false },
-        global: {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`,
-            'x-supabase-api-key': supabaseKey,
-          },
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
         },
-    })
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // if user is not signed in and the current path is not /login or /register, redirect the user to /login
+  const { pathname } = request.nextUrl;
+  if (!user && !['/login', '/register'].includes(pathname)) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // if user is signed in and the current path is /login or /register, redirect the user to /dashboard
+  if (user && ['/login', '/register', '/'].includes(pathname)) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+
+  return response;
 }
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json|icons).*)',
+  ],
+};

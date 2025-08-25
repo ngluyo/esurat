@@ -1,135 +1,99 @@
-// esurat/src/app/dashboard/surat/page.tsx
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/utils/supabaseClient'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabaseClient';
 
-interface Surat {
-  id: string
-  nomor_surat: string
-  perihal: string
-  status: string
-  created_at: string
-}
+type Surat = {
+  id: string;
+  created_at: string;
+  nomor_surat: string;
+  perihal: string;
+  jenis_surat: string;
+  status: string;
+};
 
 export default function SuratListPage() {
-  const [suratList, setSuratList] = useState<Surat[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const router = useRouter()
+  const [suratList, setSuratList] = useState<Surat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
 
   useEffect(() => {
     const fetchSurat = async () => {
-      setLoading(true)
-      const { data: user } = await supabase.auth.getUser()
-
-      if (!user.user) {
-        // Redirect jika tidak ada user
-        router.push('/login')
-        return
-      }
-
-      // Ambil semua surat yang dibuat oleh user yang sedang login
       const { data, error } = await supabase
         .from('surat')
-        .select('*')
-        .eq('pengirim_id', user.user.id)
-        .order('created_at', { ascending: false })
+        .select('id, created_at, nomor_surat, perihal, jenis_surat, status')
+        .order('created_at', { ascending: false });
 
       if (error) {
-        setError(error.message)
+        setError(error.message);
       } else {
-        setSuratList(data as Surat[])
+        setSuratList(data);
       }
-      setLoading(false)
-    }
+      setLoading(false);
+    };
 
-    fetchSurat()
-  }, [router])
+    fetchSurat();
+  }, [supabase]);
 
-  const handleDelete = async (suratId: string, nomorSurat: string) => {
-    // Konfirmasi sebelum menghapus
-    if (!confirm(`Apakah Anda yakin ingin menghapus surat "${nomorSurat}"? Tindakan ini tidak dapat dibatalkan.`)) {
-      return
-    }
-
-    setDeletingId(suratId)
-    
-    try {
-      const { error } = await supabase
-        .from('surat')
-        .delete()
-        .eq('id', suratId)
-
-      if (error) {
-        alert('Gagal menghapus surat: ' + error.message)
-      } else {
-        // Update state untuk menghilangkan surat yang dihapus dari daftar
-        setSuratList(prevList => prevList.filter(surat => surat.id !== suratId))
-        alert('Surat berhasil dihapus')
-      }
-    } catch (error) {
-      alert('Terjadi kesalahan saat menghapus surat')
-      console.error('Error deleting surat:', error)
-    } finally {
-      setDeletingId(null)
-    }
-  }
-
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center bg-gray-100 text-gray-800">Memuat...</div>
-  }
-
-  if (error) {
-    return <div className="flex min-h-screen items-center justify-center bg-gray-100 text-red-600">Error: {error}</div>
-  }
+  const handleRowClick = (id: string) => {
+    router.push(`/dashboard/surat/${id}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800">Daftar Surat</h1>
-        <Link href="/dashboard/surat/create" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
-          Buat Surat Baru
-        </Link>
-      </div>
+      <div className="max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Daftar Surat</h1>
+          <button
+            onClick={() => router.push('/dashboard/surat/create')}
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+          >
+            + Buat Surat Baru
+          </button>
+        </div>
 
-      <div className="mt-8">
-        {suratList.length === 0 ? (
-          <div className="rounded-xl bg-white p-6 text-center text-gray-600 shadow-lg">
-            <p>Belum ada surat yang Anda buat. Silakan buat surat baru.</p>
-          </div>
-        ) : (
-          <div className="grid gap-6">
-            {suratList.map((surat) => (
-              <div key={surat.id} className="flex items-center justify-between rounded-xl bg-white p-6 shadow-lg">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">{surat.nomor_surat}</h2>
-                  <p className="mt-1 text-gray-600">Perihal: {surat.perihal}</p>
-                  <p className="mt-1 text-sm text-gray-500">Dibuat pada: {new Date(surat.created_at).toLocaleDateString()}</p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <span className={`inline-flex items-center rounded-full px-3 py-0.5 text-sm font-medium ${surat.status === 'dibuat' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                    {surat.status}
-                  </span>
-                  <Link href={`/dashboard/surat/${surat.id}`} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
-                    Lihat Detail
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(surat.id, surat.nomor_surat)}
-                    disabled={deletingId === surat.id}
-                    className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed"
-                  >
-                    {deletingId === surat.id ? 'Menghapus...' : 'Hapus'}
-                  </button>
-                </div>
-              </div>
-            ))}
+        {loading && <p>Loading...</p>}
+        {error && <p className="text-red-600">Error: {error}</p>}
+        
+        {!loading && !error && (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Surat</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perihal</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {suratList.map((surat) => (
+                  <tr key={surat.id} onClick={() => handleRowClick(surat.id)} className="hover:bg-gray-50 cursor-pointer">
+                    <td className="py-4 px-6 whitespace-nowrap text-sm font-medium text-gray-900">{surat.nomor_surat}</td>
+                    <td className="py-4 px-6 whitespace-nowrap text-sm text-gray-500">{surat.perihal}</td>
+                    <td className="py-4 px-6 whitespace-nowrap text-sm text-gray-500">{surat.jenis_surat}</td>
+                    <td className="py-4 px-6 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        surat.status === 'Baru' ? 'bg-blue-100 text-blue-800' : 
+                        surat.status === 'Didisposisi' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      }`}>
+                        {surat.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 whitespace-nowrap text-sm text-gray-500">{new Date(surat.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
+         {!loading && suratList.length === 0 && <p className="text-center text-gray-500 mt-4">Tidak ada surat untuk ditampilkan.</p>}
       </div>
     </div>
-  )
+  );
 }
