@@ -38,7 +38,7 @@ export default function CreateSuratPage() {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name');
-      
+
       if (profilesError) {
         setError('Could not fetch user profiles.');
       } else {
@@ -75,7 +75,7 @@ export default function CreateSuratPage() {
         setLoading(false);
         return;
       }
-      
+
       const { data: { publicUrl } } = supabase.storage
         .from('surat_files')
         .getPublicUrl(filePath);
@@ -104,7 +104,7 @@ export default function CreateSuratPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="p-8">
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Buat Surat Baru</h1>
         {/* Placeholder for role check */}

@@ -26,7 +26,7 @@ export default function LoginPage() {
       router.push('/dashboard');
     }
   };
-  
+
   const handleRegisterRedirect = () => {
     router.push('/register');
   }

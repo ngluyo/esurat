@@ -39,43 +39,25 @@ export default function DashboardPage() {
     fetchData();
   }, [supabase]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
-
   if (loading) {
-    return (
-        <div className="flex items-center justify-center min-h-screen">
-            <p className="text-gray-700">Loading...</p>
+      return (
+        <div className="p-8">
+            <p className="text-gray-700">Loading dashboard data...</p>
         </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="flex items-center justify-between p-4 bg-white shadow-md">
-        <h1 className="text-xl font-bold text-gray-900">Dashboard eSurat</h1>
-        <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-700">Welcome, {user?.email}</span>
-            <button
-                onClick={handleLogout}
-                className="px-4 py-2 font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none"
-            >
-                Logout
-            </button>
-        </div>
-      </header>
-      <main className="p-8">
+    <div className="p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-                <h2 className="mb-4 text-2xl font-semibold text-gray-800">Surat Menunggu Disposisi</h2>
+                <h2 className="mb-4 text-xl font-semibold text-gray-800">Surat Menunggu Disposisi</h2>
                 <div className="p-6 bg-white rounded-lg shadow">
                     <p className="text-gray-600">[Placeholder untuk daftar surat yang perlu didisposisi]</p>
                 </div>
             </div>
             <div>
-                <h2 className="mb-4 text-2xl font-semibold text-gray-800">Surat Menunggu Verifikasi Anda</h2>
+                <h2 className="mb-4 text-xl font-semibold text-gray-800">Surat Menunggu Verifikasi Anda</h2>
                 <div className="p-6 bg-white rounded-lg shadow">
                     {suratUntukVerifikasi.length > 0 ? (
                         <ul className="space-y-2">
@@ -91,22 +73,6 @@ export default function DashboardPage() {
                 </div>
             </div>
         </div>
-        
-        <div className="mt-8">
-             <button 
-                onClick={() => router.push('/dashboard/surat')}
-                className="px-4 py-2 font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
-            >
-                Lihat Semua Surat
-            </button>
-            <button 
-                onClick={() => router.push('/dashboard/surat/create')}
-                className="ml-4 px-4 py-2 font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none"
-            >
-                Buat Surat Baru
-            </button>
-        </div>
-      </main>
     </div>
   );
 }

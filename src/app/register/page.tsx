@@ -18,9 +18,16 @@ export default function RegisterPage() {
     setError(null);
     setMessage(null);
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    // The full_name is passed in the options.data object.
+    // The database trigger (handle_new_user) will use this to create the profile.
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
     });
 
     if (signUpError) {
@@ -28,20 +35,10 @@ export default function RegisterPage() {
       return;
     }
 
-    if (signUpData.user) {
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([{ id: signUpData.user.id, full_name: fullName }]);
-
-        if (profileError) {
-            setError(`Error creating profile: ${profileError.message}. Please contact an administrator.`);
-            // Optionally, delete the user if profile creation fails
-            // await supabase.auth.admin.deleteUser(signUpData.user.id);
-        } else {
-            setMessage('Registration successful! Please check your email to confirm your account, then log in.');
-            // We don't redirect immediately, let them see the confirmation message.
-            // setTimeout(() => router.push('/login'), 5000);
-        }
+    // The client-side insert is no longer needed.
+    // The database trigger handles profile creation automatically.
+    if (data.user) {
+        setMessage('Registration successful! Please check your email to confirm your account, then log in.');
     } else {
         setError('Registration failed. Please try again.');
     }

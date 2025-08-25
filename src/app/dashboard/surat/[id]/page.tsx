@@ -83,7 +83,7 @@ export default function SuratDetailPage({ params }: { params: { id: string } }) 
         `)
         .eq('surat_id', params.id)
         .order('created_at', { ascending: true });
-      
+
       if (disposisiError) {
         console.error("Error fetching disposition history:", disposisiError.message);
       } else {
@@ -205,7 +205,7 @@ export default function SuratDetailPage({ params }: { params: { id: string } }) 
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="p-8">
       <div className="max-w-4xl mx-auto">
         <button onClick={() => router.back()} className="mb-4 text-sm font-medium text-indigo-600 hover:text-indigo-500">
             &larr; Kembali ke Daftar Surat
@@ -217,7 +217,7 @@ export default function SuratDetailPage({ params }: { params: { id: string } }) 
               <p className="text-sm text-gray-500">Nomor: {surat.nomor_surat}</p>
             </div>
             <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                surat.status === 'Baru' ? 'bg-blue-100 text-blue-800' : 
+                surat.status === 'Baru' ? 'bg-blue-100 text-blue-800' :
                 surat.status === 'Didisposisi' ? 'bg-yellow-100 text-yellow-800' :
                 surat.status === 'Draft' ? 'bg-gray-200 text-gray-800' :
                 surat.status === 'Menunggu Verifikasi' ? 'bg-purple-100 text-purple-800' :
